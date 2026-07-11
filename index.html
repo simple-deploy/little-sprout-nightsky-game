@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Little Sprout — The coziest way to track your little star</title>
+<meta name="description" content="Feeding, sleep, health, and every first — plus a mini-game for the road. Little Sprout." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chewy&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg-1:#150C33;
+    --bg-2:#1E1150;
+    --bg-3:#0D0824;
+    --glass:rgba(255,255,255,.07);
+    --glass-strong:rgba(255,255,255,.12);
+    --glass-border:rgba(255,255,255,.18);
+    --text:#F6F3FF;
+    --text-muted:#B7ACDE;
+
+    --pink:#FF9FD1;
+    --lavender:#B18CFF;
+    --mint:#7DF2C6;
+    --yellow:#FFE38C;
+    --sky:#8FD1FF;
+
+    --display:"Chewy", cursive;
+    --body:"Poppins", sans-serif;
+    --container:1160px;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; color:var(--text); font-family:var(--body); line-height:1.6;
+    background:radial-gradient(120% 100% at 20% 0%, var(--bg-2) 0%, var(--bg-1) 45%, var(--bg-3) 100%);
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  img{ max-width:100%; display:block; }
+  a{ color:inherit; }
+  :focus-visible{ outline:3px solid var(--mint); outline-offset:3px; }
+  .wrap{ max-width:var(--container); margin:0 auto; padding:0 32px; position:relative; z-index:2; }
+  @media (max-width:720px){ .wrap{ padding:0 20px; } }
+  section{ padding:110px 0; position:relative; }
+  @media (max-width:720px){ section{ padding:70px 0; } }
+
+  h1,h2,h3{ margin:0; font-family:var(--display); font-weight:400; letter-spacing:.01em; }
+
+  .stars{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .star{ position:absolute; width:3px; height:3px; background:#fff; border-radius:50%; animation:twinkle 3.2s ease-in-out infinite; }
+  @keyframes twinkle{ 0%,100%{ opacity:.15; } 50%{ opacity:.95; } }
+  @media (prefers-reduced-motion:reduce){ .star{ animation:none; opacity:.5; } }
+
+  .blob{ position:absolute; border-radius:50%; filter:blur(70px); opacity:.35; z-index:0; pointer-events:none; }
+
+  .glass{
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    backdrop-filter:blur(18px) saturate(140%);
+    -webkit-backdrop-filter:blur(18px) saturate(140%);
+    border-radius:24px;
+  }
+
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--mint);
+    background:rgba(125,242,198,.1); border:1px solid rgba(125,242,198,.3);
+    padding:6px 14px; border-radius:100px;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    font-family:var(--display); font-weight:400; font-size:17px;
+    padding:15px 30px; border-radius:100px; text-decoration:none; cursor:pointer; border:none;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{ transform:translateY(-2px); }
+  .btn:active{ transform:translateY(0); }
+  .btn-glow{
+    background:linear-gradient(120deg, var(--pink), var(--lavender));
+    color:#1c1240;
+    box-shadow:0 10px 30px -8px rgba(177,140,255,.65);
+  }
+  .btn-glow:hover{ box-shadow:0 14px 36px -6px rgba(177,140,255,.85); }
+  .btn-ghost{ background:var(--glass-strong); color:var(--text); border:1px solid var(--glass-border); }
+
+  /* ---------------- NAV ---------------- */
+  header{ position:sticky; top:0; z-index:50; }
+  header .wrap{ padding-top:18px; padding-bottom:18px; }
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 22px; border-radius:100px;
+  }
+  .brand{ display:flex; align-items:center; gap:9px; font-family:var(--display); font-size:20px; text-decoration:none; color:var(--text); }
+  .nav-links{ display:none; gap:26px; list-style:none; margin:0; padding:0; font-size:14px; font-weight:500; }
+  .nav-links a{ text-decoration:none; color:var(--text-muted); }
+  .nav-links a:hover{ color:var(--text); }
+  @media (min-width:900px){ .nav-links{ display:flex; } }
+  .nav-cta .btn{ padding:10px 22px; font-size:14px; }
+
+  /* ---------------- reveal ---------------- */
+  .reveal{ opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+  @media (prefers-reduced-motion:reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
+  .float{ animation:floaty 4.5s ease-in-out infinite; }
+  @keyframes floaty{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-14px); } }
+  @media (prefers-reduced-motion:reduce){ .float{ animation:none; } }
+
+  /* ---------------- HERO ---------------- */
+  .hero{ padding-top:56px; padding-bottom:70px; }
+  .hero-grid{ display:grid; grid-template-columns:1.05fr .95fr; gap:50px; align-items:center; }
+  @media (max-width:900px){ .hero-grid{ grid-template-columns:1fr; } }
+  .hero h1{ font-size:clamp(36px,5.6vw,58px); line-height:1.1; margin:18px 0 18px; }
+  .hero h1 span{ background:linear-gradient(120deg, var(--mint), var(--sky)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero .lede{ font-size:17px; color:var(--text-muted); max-width:44ch; }
+  .hero-actions{ display:flex; gap:14px; margin-top:30px; flex-wrap:wrap; }
+
+  .phone-glass{ padding:22px; width:min(280px,74vw); margin:0 auto; }
+  .phone-hud{ display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:10px; }
+  .phone-row{ display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,.06); border:1px solid var(--glass-border); border-radius:14px; padding:10px 12px; margin-bottom:8px; font-size:12.5px; font-weight:600; }
+  .phone-row b{ color:var(--mint); }
+
+  /* ---------------- GAME SECTION ---------------- */
+  .game-section .section-head{ margin-bottom:34px; }
+  .game-shell{ max-width:420px; margin:0 auto; padding:20px; }
+  .game-hud{ display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-bottom:12px; padding:0 4px; }
+  .game-hud span{ color:var(--mint); }
+  .game-stage{
+    position:relative; width:100%; height:460px; border-radius:20px; overflow:hidden;
+    background:radial-gradient(120% 100% at 50% 0%, #241659 0%, #140b34 70%);
+    border:1px solid var(--glass-border);
+    touch-action:none; cursor:grab;
+  }
+  .game-stage:active{ cursor:grabbing; }
+  .falling-item{ position:absolute; font-size:30px; user-select:none; pointer-events:none; filter:drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+  .float-score{ position:absolute; font-family:var(--display); font-size:18px; color:var(--mint); pointer-events:none; animation:floatScore 0.9s ease forwards; }
+  @keyframes floatScore{ 0%{ opacity:1; transform:translateY(0); } 100%{ opacity:0; transform:translateY(-40px); } }
+  .basket{
+    position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+    font-size:46px; filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));
+    transition:filter .15s ease;
+  }
+  .basket.hit{ filter:drop-shadow(0 0 14px var(--mint)); }
+  .basket.miss{ filter:drop-shadow(0 0 14px var(--pink)); }
+  .game-overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:30px; background:rgba(13,8,36,.82);
+    gap:10px; z-index:5;
+  }
+  .game-overlay.hidden{ display:none; }
+  .game-overlay h3{ font-size:26px; }
+  .game-overlay p{ font-size:14px; color:var(--text-muted); max-width:26ch; }
+  .best-score{ font-size:13px; color:var(--yellow); font-weight:600; margin-top:6px; }
+  .game-controls{ display:none; justify-content:space-between; margin-top:12px; }
+  @media (max-width:480px){ .game-controls{ display:flex; } }
+  .ctrl-btn{
+    width:56px; height:56px; border-radius:50%; border:1px solid var(--glass-border);
+    background:var(--glass-strong); color:var(--text); font-size:22px; display:flex; align-items:center; justify-content:center;
+  }
+  .flash{ position:absolute; inset:0; background:var(--pink); opacity:0; pointer-events:none; z-index:4; }
+  .flash.on{ animation:flash .3s ease; }
+  @keyframes flash{ 0%{ opacity:.35; } 100%{ opacity:0; } }
+  .game-hint{ text-align:center; font-size:12.5px; color:var(--text-muted); margin-top:14px; }
+
+  /* ---------------- SECTION HEAD ---------------- */
+  .section-head{ max-width:600px; margin:0 auto 50px; text-align:center; }
+  .section-head h2{ font-size:clamp(28px,4.2vw,40px); margin:14px 0 12px; }
+  .section-head p{ color:var(--text-muted); font-size:16px; }
+
+  /* ---------------- FEATURE BENTO ---------------- */
+  .bento{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  @media (max-width:900px){ .bento{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px){ .bento{ grid-template-columns:1fr; } }
+  .bento-card{ padding:26px 22px; }
+  .bento-icon{
+    width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    font-size:24px; margin-bottom:16px;
+  }
+  .bento-card h3{ font-family:var(--body); font-weight:700; font-size:17px; margin-bottom:8px; }
+  .bento-card p{ font-size:13.5px; color:var(--text-muted); margin:0; }
+
+  /* ---------------- STEPS ---------------- */
+  .steps-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; position:relative; }
+  @media (max-width:820px){ .steps-row{ grid-template-columns:1fr; } }
+  .step-glass{ padding:26px; text-align:center; }
+  .step-num{ font-family:var(--display); font-size:34px; color:var(--pink); }
+  .step-glass h3{ font-family:var(--body); font-weight:700; font-size:17px; margin:10px 0 8px; }
+  .step-glass p{ font-size:13.5px; color:var(--text-muted); }
+
+  /* ---------------- TESTIMONIALS ---------------- */
+  .quote-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  @media (max-width:900px){ .quote-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px){ .quote-grid{ grid-template-columns:1fr; } }
+  .quote-card{ padding:22px; }
+  .quote-card .tag{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:4px 10px; border-radius:100px; display:inline-block; margin-bottom:12px; }
+  .quote-card p{ font-size:14.5px; margin:0 0 12px; }
+  .quote-card footer{ font-size:12px; color:var(--text-muted); font-weight:600; }
+
+  /* ---------------- FINALE ---------------- */
+  .finale{ text-align:center; }
+  .finale h2{ font-size:clamp(32px,5vw,52px); margin:18px auto 16px; max-width:16ch; }
+  .finale p{ color:var(--text-muted); font-size:16.5px; max-width:44ch; margin:0 auto 34px; }
+  .finale-actions{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  /* ---------------- FOOTER ---------------- */
+  footer.site-footer{ padding:36px 0; border-top:1px solid var(--glass-border); }
+  .footer-grid{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+  .footer-links{ display:flex; gap:22px; list-style:none; margin:0; padding:0; font-size:13px; color:var(--text-muted); }
+  .footer-links a{ text-decoration:none; }
+  .footer-note{ font-size:12px; color:var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="stars" id="starsField" aria-hidden="true"></div>
+<div class="blob float" style="width:420px; height:420px; background:var(--lavender); top:-120px; left:-140px;"></div>
+<div class="blob float" style="width:360px; height:360px; background:var(--pink); top:400px; right:-160px; animation-delay:1.2s;"></div>
+<div class="blob float" style="width:300px; height:300px; background:var(--mint); bottom:0; left:10%; animation-delay:2.1s;"></div>
+
+<header id="siteHeader">
+  <div class="wrap">
+    <nav class="glass">
+      <a href="#top" class="brand">
+        <svg width="24" height="24" viewBox="0 0 40 40"><path d="M20 4l3.5 9.5L33 17l-9.5 3.5L20 30l-3.5-9.5L7 17l9.5-3.5z" fill="#FFE38C"/></svg>
+        Little Sprout
+      </a>
+      <ul class="nav-links">
+        <li><a href="#play">Play</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#stories">Stories</a></li>
+      </ul>
+      <div class="nav-cta"><a href="#download" class="btn btn-glow">Get the app</a></div>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow reveal in">✨ Now with a mini-game</span>
+        <h1 class="reveal in">The coziest way to<br>track your <span>little star.</span></h1>
+        <p class="lede reveal in">Feeding, sleep, health, and every first — synced across every caregiver,
+          wrapped in something that actually feels nice to open at 3am.</p>
+        <div class="hero-actions reveal in">
+          <a href="#download" class="btn btn-glow">Get the app — free</a>
+          <a href="#play" class="btn btn-ghost">🎮 Play the mini-game</a>
+        </div>
+      </div>
+      <div class="reveal in">
+        <div class="glass phone-glass float">
+          <div class="phone-hud"><span>Maya · 14mo</span><span>Today</span></div>
+          <div class="phone-row"><span>🍼 Fed</span><b>720ml</b></div>
+          <div class="phone-row"><span>😴 Slept</span><b>12.5h</b></div>
+          <div class="phone-row"><span>🎉 Milestones</span><b>18/24</b></div>
+          <div class="phone-row"><span>💬 New quote</span><b>"hele-poter"</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MINI GAME ================= -->
+  <section class="game-section" id="play">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Just for fun</span>
+        <h2>Feed Baby Sprout! 🍼</h2>
+        <p>Drag (or use the arrow keys) to move the bottle. Catch the good stuff, dodge the yucky stuff.</p>
+      </div>
+
+      <div class="glass game-shell reveal">
+        <div class="game-hud">
+          <div>⭐ <span id="scoreDisplay">0</span></div>
+          <div>❤️ <span id="livesDisplay">3</span></div>
+          <div>⏱️ <span id="timeDisplay">30</span>s</div>
+        </div>
+        <div class="game-stage" id="gameStage" tabindex="0" aria-label="Little Sprout mini-game stage">
+          <div class="flash" id="flash"></div>
+          <div class="basket" id="basket">🍼</div>
+
+          <div class="game-overlay" id="startOverlay">
+            <h3>Ready, sprout?</h3>
+            <p>Catch bananas, avocados, and stars. Watch out for socks and bugs!</p>
+            <button class="btn btn-glow" id="startBtn">▶ Play</button>
+            <div class="best-score">Best score: <span id="bestScoreStart">0</span></div>
+          </div>
+
+          <div class="game-overlay hidden" id="endOverlay">
+            <h3 id="endTitle">Time's up!</h3>
+            <p>Score: <span id="finalScore">0</span></p>
+            <p id="newBestBadge" class="hidden" style="color:var(--yellow); font-weight:700;">🎉 New best score!</p>
+            <button class="btn btn-glow" id="restartBtn">Play again</button>
+          </div>
+        </div>
+
+        <div class="game-controls">
+          <button class="ctrl-btn" id="leftBtn" aria-label="Move left">◀</button>
+          <button class="ctrl-btn" id="rightBtn" aria-label="Move right">▶</button>
+        </div>
+        <div class="game-hint">On desktop: drag with your mouse, or use ← / → after clicking the game.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">What's inside</span>
+        <h2>Every stage, one app</h2>
+        <p>From the first bottle to the first bike ride, built around how caregiving actually happens.</p>
+      </div>
+      <div class="bento">
+        <div class="glass bento-card reveal">
+          <div class="bento-icon" style="background:rgba(255,159,209,.18); color:var(--pink);">🍼</div>
+          <h3>Feeding &amp; sleep</h3>
+          <p>Breast, bottle, solids, and nap timers — logged in seconds, totalled automatically.</p>
+        </div>
+        <div class="glass bento-card reveal">
+          <div class="bento-icon" style="background:rgba(143,209,255,.18); color:var(--sky);">💉</div>
+          <h3>Health</h3>
+          <p>Auto-generated vaccine schedule and an illness timeline ready for the pediatrician.</p>
+        </div>
+        <div class="glass bento-card reveal">
+          <div class="bento-icon" style="background:rgba(255,227,140,.18); color:var(--yellow);">🎉</div>
+          <h3>Milestones</h3>
+          <p>An age-matched checklist, newborn to age six, with gentle nudges — never alarms.</p>
+        </div>
+        <div class="glass bento-card reveal">
+          <div class="bento-icon" style="background:rgba(177,140,255,.18); color:var(--lavender);">💬</div>
+          <h3>Memory capsule</h3>
+          <p>First words, funny quotes, and photos — timestamped against their exact age.</p>
+        </div>
+        <div class="glass bento-card reveal">
+          <div class="bento-icon" style="background:rgba(125,242,198,.18); color:var(--mint);">👨‍👩‍👧</div>
+          <h3>Squad sync</h3>
+          <p>Invite your partner, nanny, or grandparent — everyone sees the same log, live.</p>
+        </div>
+        <div class="glass bento-card reveal">
+          <div class="bento-icon" style="background:rgba(255,159,209,.18); color:var(--pink);">📈</div>
+          <h3>Growth chart</h3>
+          <p>Weight, height, and head circumference, plotted into real percentiles.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section>
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Getting started</span>
+        <h2>Three steps, then it just runs</h2>
+      </div>
+      <div class="steps-row">
+        <div class="glass step-glass reveal">
+          <div class="step-num">01</div>
+          <h3>Add their birthday</h3>
+          <p>Vaccine schedule and milestone checklist build themselves instantly.</p>
+        </div>
+        <div class="glass step-glass reveal">
+          <div class="step-num">02</div>
+          <h3>Invite your people</h3>
+          <p>Partner, nanny, grandparent — synced within a minute of accepting.</p>
+        </div>
+        <div class="glass step-glass reveal">
+          <div class="step-num">03</div>
+          <h3>Log &amp; look back</h3>
+          <p>Track the daily stuff in seconds; unlock a memory book every birthday.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STORIES ================= -->
+  <section id="stories">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">From real parents</span>
+        <h2>What the app gets right</h2>
+      </div>
+      <div class="quote-grid">
+        <div class="glass quote-card reveal"><span class="tag" style="background:rgba(255,159,209,.15); color:var(--pink);">Sleep</span><p>"The ring just tells me if she's napped enough before daycare pickup. Game changer."</p><footer>Parent of a 9-month-old</footer></div>
+        <div class="glass quote-card reveal"><span class="tag" style="background:rgba(143,209,255,.15); color:var(--sky);">Health</span><p>"Handed the illness timeline straight to our pediatrician. No more guessing at fevers."</p><footer>Parent of a 2-year-old</footer></div>
+        <div class="glass quote-card reveal"><span class="tag" style="background:rgba(255,227,140,.15); color:var(--yellow);">Caregivers</span><p>"Our nanny logs everything. I just... know. No more end-of-shift interrogation."</p><footer>Parent of twins</footer></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINALE ================= -->
+  <section class="finale" id="download">
+    <div class="wrap">
+      <span class="eyebrow reveal">Free to start</span>
+      <h2 class="reveal">Ready to meet your little star?</h2>
+      <p class="reveal">Every feed, every fever, every first word — tracked, celebrated, and synced with everyone who shows up for your kid.</p>
+      <div class="finale-actions reveal">
+        <a href="#" class="btn btn-glow">Get the app — it's free</a>
+        <a href="#play" class="btn btn-ghost">🎮 One more round?</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <a href="#top" class="brand" style="font-size:16px;">
+      <svg width="20" height="20" viewBox="0 0 40 40"><path d="M20 4l3.5 9.5L33 17l-9.5 3.5L20 30l-3.5-9.5L7 17l9.5-3.5z" fill="#FFE38C"/></svg>
+      Little Sprout
+    </a>
+    <ul class="footer-links">
+      <li><a href="#play">Play</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#stories">Stories</a></li>
+      <li><a href="#">Privacy</a></li>
+    </ul>
+    <div class="footer-note">© 2026 Little Sprout. Not a substitute for medical advice.</div>
+  </div>
+</footer>
+
+<script>
+  // ---------- Background stars ----------
+  const starsField = document.getElementById('starsField');
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.animationDelay = Math.random() * 3 + 's';
+    starsField.appendChild(s);
+  }
+
+  // ---------- Reveal on scroll ----------
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  reveals.forEach(el => io.observe(el));
+
+  // ================= MINI GAME =================
+  (function () {
+    const stage = document.getElementById('gameStage');
+    const basket = document.getElementById('basket');
+    const startOverlay = document.getElementById('startOverlay');
+    const endOverlay = document.getElementById('endOverlay');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const livesDisplay = document.getElementById('livesDisplay');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const finalScore = document.getElementById('finalScore');
+    const endTitle = document.getElementById('endTitle');
+    const newBestBadge = document.getElementById('newBestBadge');
+    const bestScoreStart = document.getElementById('bestScoreStart');
+    const flash = document.getElementById('flash');
+    const leftBtn = document.getElementById('leftBtn');
+    const rightBtn = document.getElementById('rightBtn');
+
+    const GOOD_ITEMS = ['🍌', '🥑', '🍎', '🧸', '⭐'];
+    const BAD_ITEMS = ['🧦', '🐛', '💊'];
+    const BEST_KEY = 'littleSproutGameBest';
+
+    let stageW = 0, stageH = 0;
+    let basketX = 0;
+    const basketHalfWidth = 26;
+
+    let items = [];
+    let score = 0, lives = 3, timeLeft = 30;
+    let countdownTimer = null, rafId = null, spawnRafId = null;
+    let running = false;
+    let lastSpawn = 0, spawnInterval = 900;
+    let elapsed = 0;
+
+    function getBest() {
+      return Number(localStorage.getItem(BEST_KEY) || 0);
+    }
+    bestScoreStart.textContent = getBest();
+
+    function measure() {
+      stageW = stage.clientWidth;
+      stageH = stage.clientHeight;
+    }
+
+    function setBasketX(x) {
+      basketX = Math.max(basketHalfWidth, Math.min(stageW - basketHalfWidth, x));
+      basket.style.left = basketX + 'px';
+    }
+
+    function resetGame() {
+      items.forEach(it => it.el.remove());
+      items = [];
+      score = 0; lives = 3; timeLeft = 30; elapsed = 0; spawnInterval = 900;
+      scoreDisplay.textContent = score;
+      livesDisplay.textContent = '❤️'.repeat(lives) || '—';
+      timeDisplay.textContent = timeLeft;
+      measure();
+      setBasketX(stageW / 2);
+    }
+
+    function spawnItem() {
+      const isBad = Math.random() < 0.22;
+      const pool = isBad ? BAD_ITEMS : GOOD_ITEMS;
+      const emoji = pool[Math.floor(Math.random() * pool.length)];
+      const el = document.createElement('div');
+      el.className = 'falling-item';
+      el.textContent = emoji;
+      const x = 20 + Math.random() * (stageW - 40);
+      el.style.left = x + 'px';
+      el.style.top = '-36px';
+      stage.appendChild(el);
+      items.push({
+        el, x, y: -36,
+        speed: 1.6 + Math.random() * 1.2 + elapsed * 0.01,
+        isBad,
+      });
+    }
+
+    function floatScoreText(x, y, text, color) {
+      const el = document.createElement('div');
+      el.className = 'float-score';
+      el.textContent = text;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.color = color;
+      stage.appendChild(el);
+      setTimeout(() => el.remove(), 900);
+    }
+
+    function doFlash() {
+      flash.classList.remove('on');
+      void flash.offsetWidth;
+      flash.classList.add('on');
+    }
+
+    function bumpBasket(kind) {
+      basket.classList.remove('hit', 'miss');
+      void basket.offsetWidth;
+      basket.classList.add(kind);
+    }
+
+    function tick() {
+      if (!running) return;
+      const basketY = stageH - 46;
+      for (let i = items.length - 1; i >= 0; i--) {
+        const it = items[i];
+        it.y += it.speed;
+        it.el.style.top = it.y + 'px';
+
+        const withinX = Math.abs(it.x - basketX) < basketHalfWidth + 14;
+        const withinY = it.y >= basketY - 20 && it.y <= basketY + 20;
+
+        if (withinX && withinY) {
+          if (it.isBad) {
+            lives = Math.max(0, lives - 1);
+            livesDisplay.textContent = '❤️'.repeat(lives) || '—';
+            floatScoreText(it.x, it.y, 'yuck!', '#FF9FD1');
+            doFlash();
+            bumpBasket('miss');
+          } else {
+            score += 10;
+            scoreDisplay.textContent = score;
+            floatScoreText(it.x, it.y, '+10', '#7DF2C6');
+            bumpBasket('hit');
+          }
+          it.el.remove();
+          items.splice(i, 1);
+          continue;
+        }
+
+        if (it.y > stageH + 20) {
+          it.el.remove();
+          items.splice(i, 1);
+        }
+      }
+
+      if (lives <= 0) {
+        endGame('Out of milk!');
+        return;
+      }
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function spawnLoop(ts) {
+      if (!running) return;
+      if (ts - lastSpawn > spawnInterval) {
+        spawnItem();
+        lastSpawn = ts;
+        spawnInterval = Math.max(420, spawnInterval - 4);
+      }
+      spawnRafId = requestAnimationFrame(spawnLoop);
+    }
+
+    function startCountdown() {
+      countdownTimer = setInterval(() => {
+        timeLeft -= 1;
+        timeDisplay.textContent = Math.max(timeLeft, 0);
+        elapsed += 1;
+        if (timeLeft <= 0) {
+          endGame("Time's up!");
+        }
+      }, 1000);
+    }
+
+    function startGame() {
+      resetGame();
+      running = true;
+      startOverlay.classList.add('hidden');
+      endOverlay.classList.add('hidden');
+      lastSpawn = performance.now();
+      spawnRafId = requestAnimationFrame(spawnLoop);
+      rafId = requestAnimationFrame(tick);
+      startCountdown();
+    }
+
+    function endGame(title) {
+      if (!running) return;
+      running = false;
+      clearInterval(countdownTimer);
+      cancelAnimationFrame(rafId);
+      cancelAnimationFrame(spawnRafId);
+      items.forEach(it => it.el.remove());
+      items = [];
+
+      const best = getBest();
+      const isNewBest = score > best;
+      if (isNewBest) localStorage.setItem(BEST_KEY, String(score));
+
+      endTitle.textContent = title;
+      finalScore.textContent = score;
+      newBestBadge.classList.toggle('hidden', !isNewBest);
+      bestScoreStart.textContent = getBest();
+      endOverlay.classList.remove('hidden');
+    }
+
+    // ---- Input: drag / touch ----
+    let dragging = false;
+    function pointerToX(clientX) {
+      const rect = stage.getBoundingClientRect();
+      return clientX - rect.left;
+    }
+    stage.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      if (running) setBasketX(pointerToX(e.clientX));
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (dragging && running) setBasketX(pointerToX(e.clientX));
+    });
+    window.addEventListener('pointerup', () => { dragging = false; });
+
+    // ---- Input: keyboard ----
+    stage.addEventListener('keydown', (e) => {
+      if (!running) return;
+      if (e.key === 'ArrowLeft') setBasketX(basketX - 26);
+      if (e.key === 'ArrowRight') setBasketX(basketX + 26);
+    });
+
+    // ---- Input: on-screen buttons (mobile) ----
+    leftBtn.addEventListener('click', () => running && setBasketX(basketX - 30));
+    rightBtn.addEventListener('click', () => running && setBasketX(basketX + 30));
+
+    window.addEventListener('resize', () => { if (!running) measure(); });
+
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+
+    measure();
+    setBasketX(stageW / 2);
+  })();
+</script>
+
+</body>
+</html>
